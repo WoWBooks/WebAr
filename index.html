@@ -1,265 +1,261 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>De Psoas – Words of Wholeness</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>De onzichtbare ketting — AR</title>
 
-<!-- MindAR + A-Frame -->
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <!-- A-Frame -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+  <!-- AR.js voor A-Frame (markerless / location based uitgeschakeld, we gebruiken marker) -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:#0a0a0f; color:#e8e0d0; font-family:Georgia,serif; overflow:hidden; height:100vh; width:100vw; }
+  <style>
+    * { margin: 0; padding: 0; }
+    body { overflow: hidden; font-family: 'Georgia', serif; }
 
-/* SPLASH */
-#splash {
-  position:fixed; inset:0; z-index:100;
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  padding:2.5rem 2rem; text-align:center; gap:1.4rem;
-  background:#0a0a0f;
-}
-.brand { font-size:.65rem; letter-spacing:.35em; text-transform:uppercase; color:#7a6a5a; }
-.divider { width:36px; height:1px; background:linear-gradient(90deg,transparent,#c4a882,transparent); }
-#splash h1 { font-size:1.9rem; font-weight:300; line-height:1.25; color:#e8e0d0; }
-#splash h1 em { font-style:italic; color:#c4a882; }
-.quote { font-size:.82rem; font-style:italic; color:#7a6a5a; max-width:270px; line-height:1.75; }
-.instruction { font-size:.78rem; color:#8a7a6a; line-height:1.7; max-width:250px; }
-#start-btn {
-  padding:.85rem 2.4rem; background:transparent;
-  border:1px solid #c4a882; color:#c4a882;
-  font-family:Georgia,serif; font-size:.8rem;
-  letter-spacing:.2em; text-transform:uppercase;
-  cursor:pointer; border-radius:2px;
-  -webkit-tap-highlight-color:transparent;
-}
-#start-btn:active { background:#c4a882; color:#0a0a0f; }
+    /* Laadscherm */
+    #laadscherm {
+      position: fixed;
+      inset: 0;
+      background: #0a0805;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      text-align: center;
+      padding: 2rem;
+      transition: opacity 1s ease;
+    }
 
-/* AR SCENE */
-#ar-wrapper { position:fixed; inset:0; display:none; z-index:10; }
-#ar-wrapper.active { display:block; }
+    #laadscherm .titel {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: rgba(200,168,74,0.5);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
 
-/* Top bar */
-#top-bar {
-  position:fixed; top:0; left:0; right:0; z-index:50;
-  padding:1.2rem 1.5rem;
-  display:none; align-items:center; justify-content:space-between;
-  background:linear-gradient(rgba(10,10,15,.75),transparent);
-  pointer-events:none;
-}
-#top-bar.visible { display:flex; }
-.top-logo { font-size:.6rem; letter-spacing:.3em; text-transform:uppercase; color:#c4a882; }
-#close-btn {
-  background:rgba(255,255,255,.12); border:none; color:#e8e0d0;
-  width:34px; height:34px; border-radius:50%; font-size:1rem;
-  cursor:pointer; pointer-events:all;
-  -webkit-tap-highlight-color:transparent;
-}
+    #laadscherm p {
+      font-size: 14px;
+      color: #c8b890;
+      font-style: italic;
+      line-height: 1.8;
+      margin-bottom: 2rem;
+    }
 
-/* Scan hint */
-#scan-hint {
-  position:fixed; bottom:40%; left:0; right:0; z-index:50;
-  text-align:center; pointer-events:none;
-  display:none;
-}
-#scan-hint.visible { display:block; }
-#scan-hint p {
-  font-size:.7rem; letter-spacing:.2em; text-transform:uppercase;
-  color:rgba(196,168,130,.8);
-  animation:blink 2s ease-in-out infinite;
-}
-@keyframes blink { 0%,100%{opacity:.3} 50%{opacity:1} }
+    #laadscherm .instructie {
+      font-size: 11px;
+      color: rgba(200,168,74,0.4);
+      letter-spacing: 0.1em;
+      line-height: 1.9;
+      margin-bottom: 2.5rem;
+    }
 
-/* Audio panel — verschijnt als pagina herkend */
-#audio-panel {
-  position:fixed; bottom:0; left:0; right:0; z-index:50;
-  padding:1.2rem 1.5rem 2.5rem;
-  background:linear-gradient(transparent, rgba(10,10,15,.95) 25%);
-  display:none; flex-direction:column; align-items:center; gap:.9rem;
-  transform:translateY(20px); opacity:0;
-  transition:opacity .5s ease, transform .5s ease;
-}
-#audio-panel.visible { display:flex; }
-#audio-panel.show { opacity:1; transform:translateY(0); }
-.panel-label { font-size:.65rem; letter-spacing:.25em; text-transform:uppercase; color:#7a6a5a; }
-.panel-title { font-style:italic; font-size:.95rem; color:#e8e0d0; }
-.audio-btns { display:flex; gap:.9rem; flex-wrap:wrap; justify-content:center; }
-.audio-btn {
-  padding:.8rem 1.6rem;
-  background:rgba(196,168,130,.1);
-  border:1px solid rgba(196,168,130,.35);
-  color:#c4a882; font-family:Georgia,serif; font-size:.82rem;
-  letter-spacing:.06em; cursor:pointer; border-radius:2px;
-  min-width:140px; text-align:center;
-  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-  -webkit-tap-highlight-color:transparent;
-}
-.audio-btn.playing { background:rgba(196,168,130,.25); border-color:#c4a882; }
+    #laadscherm button {
+      background: transparent;
+      border: 0.5px solid rgba(200,168,74,0.5);
+      color: rgba(200,168,74,0.9);
+      font-family: 'Georgia', serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      padding: 14px 32px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
 
-/* Found flash */
-#found-flash {
-  position:fixed; inset:0; z-index:60;
-  display:flex; align-items:center; justify-content:center;
-  pointer-events:none; opacity:0;
-  transition:opacity .4s ease;
-}
-#found-flash.show { opacity:1; }
-#found-flash span {
-  font-size:.75rem; letter-spacing:.3em; text-transform:uppercase;
-  color:#c4a882; padding:.5rem 1.5rem;
-  border:1px solid rgba(196,168,130,.4);
-  background:rgba(10,10,15,.7);
-  backdrop-filter:blur(8px);
-}
-</style>
+    /* Hiro marker uitleg */
+    #marker-uitleg {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: rgba(200,168,74,0.4);
+      letter-spacing: 0.12em;
+      text-align: center;
+      z-index: 999;
+      pointer-events: none;
+      white-space: nowrap;
+      display: none;
+    }
+
+    /* Herhaal knop */
+    #herhaal {
+      position: fixed;
+      bottom: 2rem;
+      right: 1.5rem;
+      background: rgba(0,0,0,0.6);
+      border: 0.5px solid rgba(200,168,74,0.3);
+      color: rgba(200,168,74,0.6);
+      font-family: 'Georgia', serif;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      padding: 8px 16px;
+      cursor: pointer;
+      text-transform: uppercase;
+      z-index: 999;
+      display: none;
+      backdrop-filter: blur(4px);
+    }
+  </style>
 </head>
 <body>
 
-<!-- SPLASH -->
-<div id="splash">
-  <div class="brand">Words of Wholeness · Ida Rinsampessy</div>
-  <div class="divider"></div>
-  <h1>De Psoas —<br><em>de spier van de ziel</em></h1>
-  <div class="quote">"Werkelijke veiligheid begint niet in je hoofd, maar in het weefsel dat je draagt."</div>
-  <div class="divider"></div>
-  <div class="instruction">Richt je camera op pagina 45 van het boek.<br>De scène verschijnt vanzelf.</div>
-  <button id="start-btn" onclick="startAR()">Camera openen</button>
+<!-- Laadscherm -->
+<div id="laadscherm">
+  <p class="titel">Wat je schaduw je wil vertellen</p>
+  <p>Hoofdstuk 1<br>De onzichtbare ketting</p>
+  <p class="instructie">
+    Stap 1 — Print de Hiro marker<br>
+    Stap 2 — Leg hem naast de pagina<br>
+    Stap 3 — Richt je camera erop<br>
+    Stap 4 — De woorden verschijnen
+  </p>
+  <button onclick="startAR()">✦ &nbsp; Start AR</button>
 </div>
 
-<!-- AR SCENE -->
-<div id="ar-wrapper">
-  <a-scene id="ar-scene"
-    mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;"
-    color-space="sRGB"
-    renderer="colorManagement: true"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
-    style="position:absolute;inset:0;">
-    <a-assets>
-      <audio id="a1" src="de_psoas.mp3" preload="auto" crossorigin="anonymous"></audio>
-      <audio id="a2" src="wat_de_psoas_inhoudt.mp3" preload="auto" crossorigin="anonymous"></audio>
-    </a-assets>
-    <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
-    <a-entity mindar-image-target="targetIndex: 0" id="ar-target">
-      <!-- Glow sphere -->
-      <a-sphere position="0 0 0.01" radius="0.06" color="#c4a882" opacity="0.75"
-        material="emissive:#c4a882; emissiveIntensity:0.6; transparent:true;"
-        animation="property:position; from:0 -0.02 0.01; to:0 0.02 0.01; dur:2200; dir:alternate; loop:true; easing:easeInOutSine">
-      </a-sphere>
-      <!-- Outer ring -->
-      <a-torus position="0 0 0.005" radius="0.15" radius-tubular="0.004" color="#c4a882" opacity="0.35"
-        animation="property:rotation; to:0 0 360; dur:9000; loop:true; easing:linear">
-      </a-torus>
-      <!-- Inner ring -->
-      <a-torus position="0 0 0.005" radius="0.09" radius-tubular="0.003" color="#e8e0d0" opacity="0.2"
-        animation="property:rotation; from:0 0 0; to:0 0 -360; dur:5500; loop:true; easing:linear">
-      </a-torus>
-    </a-entity>
-  </a-scene>
-</div>
+<p id="marker-uitleg">Richt camera op de Hiro marker ↓</p>
+<button id="herhaal" onclick="location.reload()">↺ Opnieuw</button>
 
-<!-- TOP BAR -->
-<div id="top-bar">
-  <div class="top-logo">Words of Wholeness</div>
-  <button id="close-btn" onclick="stopAR()">✕</button>
-</div>
+<!-- A-Frame AR scene -->
+<a-scene
+  id="arscene"
+  embedded
+  arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+  vr-mode-ui="enabled: false"
+  renderer="logarithmicDepthBuffer: true; antialias: true;"
+  style="display:none"
+>
 
-<!-- SCAN HINT -->
-<div id="scan-hint">
-  <p>Richt op pagina 45</p>
-</div>
+  <!-- Hiro marker als anker -->
+  <a-marker preset="hiro" id="marker">
 
-<!-- AUDIO PANEL -->
-<div id="audio-panel">
-  <div class="panel-label">Luister</div>
-  <div class="panel-title">Wat de psoas onthoudt</div>
-  <div class="audio-btns">
-    <button class="audio-btn" id="btn1" onclick="playAudio(1)">▶ De psoas</button>
-    <button class="audio-btn" id="btn2" onclick="playAudio(2)">▶ Wat ze onthoudt</button>
-  </div>
-</div>
+    <!-- Regel 1 — zweeft laag, warm goud -->
+    <a-text
+      value="Ze keek in de spiegel,"
+      align="center"
+      color="#e8d8b0"
+      opacity="0"
+      width="3.5"
+      position="0 0.8 0"
+      rotation="-90 0 0"
+      animation__verschijn="property: opacity; from: 0; to: 0.9; dur: 2000; delay: 500; easing: easeInOutSine"
+      animation__zweef="property: position; from: 0 0.8 0; to: 0 1.0 0; dur: 3000; delay: 500; dir: alternate; loop: true; easing: easeInOutSine"
+    ></a-text>
 
-<!-- FOUND FLASH -->
-<div id="found-flash"><span>Pagina herkend</span></div>
+    <a-text
+      value="maar zag niet alleen zichzelf."
+      align="center"
+      color="#c8b890"
+      opacity="0"
+      width="3.5"
+      position="0 0.55 0"
+      rotation="-90 0 0"
+      animation__verschijn="property: opacity; from: 0; to: 0.8; dur: 2000; delay: 1200; easing: easeInOutSine"
+      animation__zweef="property: position; from: 0 0.55 0; to: 0 0.75 0; dur: 3200; delay: 1200; dir: alternate; loop: true; easing: easeInOutSine"
+    ></a-text>
+
+    <!-- Scheidingslijn -->
+    <a-plane
+      color="#c8a84a"
+      opacity="0"
+      width="1.2"
+      height="0.005"
+      position="0 0.2 0"
+      rotation="-90 0 0"
+      animation__verschijn="property: opacity; from: 0; to: 0.4; dur: 1500; delay: 3000; easing: easeInOutSine"
+    ></a-plane>
+
+    <!-- Regel 2 — de climax, groter en helderder -->
+    <a-text
+      value="Daarna moest de waarheid"
+      align="center"
+      color="#f0e4c4"
+      opacity="0"
+      width="4"
+      position="0 -0.1 0"
+      rotation="-90 0 0"
+      animation__verschijn="property: opacity; from: 0; to: 1; dur: 2500; delay: 4000; easing: easeInOutSine"
+      animation__zweef="property: position; from: 0 -0.1 0; to: 0 0.1 0; dur: 2800; delay: 4000; dir: alternate; loop: true; easing: easeInOutSine"
+    ></a-text>
+
+    <a-text
+      value="op tafel komen."
+      align="center"
+      color="#f0e4c4"
+      opacity="0"
+      width="4"
+      position="0 -0.4 0"
+      rotation="-90 0 0"
+      animation__verschijn="property: opacity; from: 0; to: 1; dur: 2500; delay: 5000; easing: easeInOutSine"
+      animation__zweef="property: position; from: 0 -0.4 0; to: 0 -0.2 0; dur: 2800; delay: 5000; dir: alternate; loop: true; easing: easeInOutSine"
+    ></a-text>
+
+    <!-- Subtitel -->
+    <a-text
+      value="Wat lang verzwegen bleef..."
+      align="center"
+      color="#8a7850"
+      opacity="0"
+      width="2.8"
+      position="0 -0.75 0"
+      rotation="-90 0 0"
+      animation__verschijn="property: opacity; from: 0; to: 0.7; dur: 2000; delay: 7000; easing: easeInOutSine"
+    ></a-text>
+
+    <!-- Gouden deeltjes — kleine bolletjes die opstijgen -->
+    <a-sphere color="#c8a84a" opacity="0" radius="0.015" position="-0.5 0.3 0"
+      animation__verschijn="property: opacity; from: 0; to: 0.8; dur: 1000; delay: 2000"
+      animation__zweef="property: position; from: -0.5 0.3 0; to: -0.6 1.2 0; dur: 4000; delay: 2000; loop: true; easing: easeInSine"
+    ></a-sphere>
+
+    <a-sphere color="#c8a84a" opacity="0" radius="0.01" position="0.3 0.1 0"
+      animation__verschijn="property: opacity; from: 0; to: 0.6; dur: 1000; delay: 3500"
+      animation__zweef="property: position; from: 0.3 0.1 0; to: 0.5 1.0 0; dur: 5000; delay: 3500; loop: true; easing: easeInSine"
+    ></a-sphere>
+
+    <a-sphere color="#e8d070" opacity="0" radius="0.008" position="0 0.5 0"
+      animation__verschijn="property: opacity; from: 0; to: 0.5; dur: 1000; delay: 5500"
+      animation__zweef="property: position; from: 0 0.5 0; to: 0.2 1.4 0; dur: 3500; delay: 5500; loop: true; easing: easeInSine"
+    ></a-sphere>
+
+    <a-sphere color="#c8a84a" opacity="0" radius="0.012" position="-0.2 -0.3 0"
+      animation__verschijn="property: opacity; from: 0; to: 0.7; dur: 1000; delay: 6000"
+      animation__zweef="property: position; from: -0.2 -0.3 0; to: -0.4 0.8 0; dur: 4500; delay: 6000; loop: true; easing: easeInSine"
+    ></a-sphere>
+
+  </a-marker>
+
+  <a-entity camera></a-entity>
+</a-scene>
 
 <script>
-var sceneEl, mindarSystem;
-var curAudio = null, curBtn = null;
-var targetVisible = false;
+  function startAR() {
+    document.getElementById('laadscherm').style.opacity = '0';
+    setTimeout(() => {
+      document.getElementById('laadscherm').style.display = 'none';
+      document.getElementById('arscene').style.display = 'block';
+      document.getElementById('marker-uitleg').style.display = 'block';
+      document.getElementById('herhaal').style.display = 'block';
+    }, 1000);
+  }
 
-function startAR() {
-  document.getElementById('splash').style.display = 'none';
-  document.getElementById('ar-wrapper').classList.add('active');
-  document.getElementById('top-bar').classList.add('visible');
-  document.getElementById('scan-hint').classList.add('visible');
-
-  sceneEl = document.getElementById('ar-scene');
-
-  sceneEl.addEventListener('loaded', function() {
-    mindarSystem = sceneEl.systems['mindar-image-system'];
-    mindarSystem.start();
+  // Verberg uitleg zodra marker gevonden is
+  document.addEventListener('DOMContentLoaded', () => {
+    const marker = document.getElementById('marker');
+    if (marker) {
+      marker.addEventListener('markerFound', () => {
+        document.getElementById('marker-uitleg').style.display = 'none';
+      });
+      marker.addEventListener('markerLost', () => {
+        document.getElementById('marker-uitleg').style.display = 'block';
+      });
+    }
   });
-
-  // Target found
-  var target = document.getElementById('ar-target');
-  target.addEventListener('targetFound', function() {
-    if (targetVisible) return;
-    targetVisible = true;
-    document.getElementById('scan-hint').classList.remove('visible');
-    // Flash
-    var flash = document.getElementById('found-flash');
-    flash.classList.add('show');
-    setTimeout(function(){ flash.classList.remove('show'); }, 1800);
-    // Show audio panel
-    var panel = document.getElementById('audio-panel');
-    panel.classList.add('visible');
-    setTimeout(function(){ panel.classList.add('show'); }, 50);
-  });
-
-  target.addEventListener('targetLost', function() {
-    targetVisible = false;
-    document.getElementById('scan-hint').classList.add('visible');
-  });
-}
-
-function stopAR() {
-  if (mindarSystem) mindarSystem.stop();
-  document.getElementById('ar-wrapper').classList.remove('active');
-  document.getElementById('top-bar').classList.remove('visible');
-  document.getElementById('scan-hint').classList.remove('visible');
-  document.getElementById('audio-panel').classList.remove('visible','show');
-  document.getElementById('splash').style.display = 'flex';
-  stopAudio();
-  targetVisible = false;
-}
-
-function playAudio(n) {
-  stopAudio();
-  var a = document.getElementById('a' + n);
-  var btn = document.getElementById('btn' + n);
-  var labels = ['De psoas', 'Wat ze onthoudt'];
-  curAudio = a; curBtn = btn;
-  a.play().then(function() {
-    btn.textContent = '⏸ ' + labels[n-1];
-    btn.classList.add('playing');
-  }).catch(function(e){ console.log('audio:', e); });
-  a.onended = function() {
-    btn.textContent = '▶ ' + labels[n-1];
-    btn.classList.remove('playing');
-    curAudio = null; curBtn = null;
-  };
-}
-
-function stopAudio() {
-  if (curAudio) { curAudio.pause(); curAudio.currentTime = 0; }
-  if (curBtn) curBtn.classList.remove('playing');
-  document.getElementById('btn1').textContent = '▶ De psoas';
-  document.getElementById('btn2').textContent = '▶ Wat ze onthoudt';
-  curAudio = null; curBtn = null;
-}
 </script>
+
 </body>
 </html>
