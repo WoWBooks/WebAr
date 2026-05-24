@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Het lichaam vergeet niet — AR</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; font-family: Georgia, serif; background: #000; }
+    #laadscherm {
+      position: fixed; inset: 0; background: #0a0805;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; z-index: 9999; text-align: center; padding: 2rem;
+      transition: opacity 1s ease;
+    }
+    .titel { font-size: 10px; letter-spacing: 0.25em; color: rgba(200,168,74,0.5); text-transform: uppercase; margin-bottom: 1.5rem; }
+    .omschrijving { font-size: 14px; color: #c8b890; font-style: italic; line-height: 1.8; margin-bottom: 1rem; }
+    .instructie { font-size: 11px; color: rgba(200,168,74,0.4); letter-spacing: 0.1em; line-height: 2; margin-bottom: 2rem; }
+    .startknop { background: transparent; border: 0.5px solid rgba(200,168,74,0.5); color: rgba(200,168,74,0.9); font-family: Georgia, serif; font-size: 11px; letter-spacing: 0.2em; padding: 14px 32px; cursor: pointer; text-transform: uppercase; }
+    #status { position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%); font-size: 10px; letter-spacing: 0.15em; color: rgba(200,168,74,0.5); text-transform: uppercase; z-index: 999; display: none; background: rgba(0,0,0,0.5); padding: 6px 14px; border-radius: 20px; white-space: nowrap; }
+    #herhaal { position: fixed; bottom: 2rem; right: 1.5rem; background: rgba(0,0,0,0.6); border: 0.5px solid rgba(200,168,74,0.3); color: rgba(200,168,74,0.6); font-family: Georgia, serif; font-size: 10px; letter-spacing: 0.15em; padding: 8px 16px; cursor: pointer; text-transform: uppercase; z-index: 999; display: none; }
+  </style>
+</head>
+<body>
+
+<div id="laadscherm">
+  <p class="titel">Wat je schaduw je wil vertellen</p>
+  <p class="omschrijving">Het lichaam vergeet niet</p>
+  <p class="instructie">
+    Richt camera op de psoas illustratie<br>
+    in het boek
+  </p>
+  <button class="startknop" onclick="startAR()">✦ &nbsp; Start AR</button>
+</div>
+
+<p id="status">Zoek de illustratie...</p>
+<button id="herhaal" onclick="location.reload()">↺ Opnieuw</button>
+
+<a-scene id="arscene"
+  mindar-image="imageTargetSrc: psoas.png; autoStart: false;"
+  color-space="sRGB"
+  renderer="colorManagement: true;"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false"
+  style="display:none">
+
+  <a-assets>
+    <img id="psoas-img" src="psoas_transparant.png" crossorigin="anonymous"/>
+  </a-assets>
+
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <a-entity mindar-image-target="targetIndex: 0">
+
+    <!-- Gouden glow -->
+    <a-circle color="#c8a84a" opacity="0.12" radius="0.55" position="0 0 -0.01"
+      animation="property: opacity; from: 0.06; to: 0.22; dur: 2000; dir: alternate; loop: true; easing: easeInOutSine"
+    ></a-circle>
+
+    <!-- Blauwe glow -->
+    <a-circle color="#4a90c8" opacity="0.07" radius="0.68" position="0 0 -0.02"
+      animation="property: opacity; from: 0.03; to: 0.14; dur: 2500; dir: alternate; loop: true; easing: easeInOutSine"
+    ></a-circle>
+
+    <!-- Psoas transparant zwevend -->
+    <a-image src="#psoas-img"
+      width="0.7" height="0.73"
+      position="0 0 0.05"
+      opacity="0"
+      transparent="true"
+      animation__verschijn="property: opacity; from: 0; to: 0.92; dur: 2000; delay: 200; easing: easeInOutSine"
+      animation__zweef="property: position; from: 0 0 0.05; to: 0 0.06 0.05; dur: 3500; delay: 200; dir: alternate; loop: true; easing: easeInOutSine"
+      animation__adem="property: scale; from: 1 1 1; to: 1.03 1.03 1.03; dur: 4000; delay: 2200; dir: alternate; loop: true; easing: easeInOutSine"
+    ></a-image>
+
+    <!-- Deeltjes -->
+    <a-sphere color="#c8a84a" opacity="0.8" radius="0.015" position="-0.4 0.1 0.1"
+      animation="property: position; from: -0.4 0.1 0.1; to: -0.45 0.45 0.1; dur: 3000; loop: true; easing: easeInSine"
+    ></a-sphere>
+    <a-sphere color="#c8a84a" opacity="0.6" radius="0.01" position="0.4 0.1 0.1"
+      animation="property: position; from: 0.4 0.1 0.1; to: 0.45 0.5 0.1; dur: 4000; loop: true; easing: easeInSine"
+    ></a-sphere>
+    <a-sphere color="#90c8e8" opacity="0.5" radius="0.008" position="-0.2 0.15 0.1"
+      animation="property: position; from: -0.2 0.15 0.1; to: -0.15 0.5 0.1; dur: 3500; loop: true; easing: easeInSine"
+    ></a-sphere>
+    <a-sphere color="#e8d070" opacity="0.7" radius="0.012" position="0.2 0.05 0.1"
+      animation="property: position; from: 0.2 0.05 0.1; to: 0.25 0.4 0.1; dur: 2800; loop: true; easing: easeInSine"
+    ></a-sphere>
+
+  </a-entity>
+</a-scene>
+
+<script>
+  function startAR() {
+    document.getElementById('laadscherm').style.opacity = '0';
+    setTimeout(() => {
+      document.getElementById('laadscherm').style.display = 'none';
+      document.getElementById('arscene').style.display = 'block';
+      document.getElementById('status').style.display = 'block';
+      document.getElementById('herhaal').style.display = 'block';
+      const scene = document.querySelector('a-scene');
+      scene.addEventListener('loaded', () => {
+        const mindarSystem = scene.systems['mindar-image-system'];
+        if (mindarSystem) mindarSystem.start();
+      });
+    }, 1000);
+  }
+</script>
+</body>
+</html>
